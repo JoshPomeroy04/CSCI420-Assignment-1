@@ -3,7 +3,7 @@ from pydriller import Repository
 import csv
 import javalang
 
-csv_corpus = pd.read_csv('CSCI-420-GenAI/CSCI420-Assignment-1/data/results.csv')
+csv_corpus = pd.read_csv('CSCI-420-GenAI/CSCI420-Assignment-1/data/Raw_Data/results.csv')
 
 repoList = []
 for idx,row in csv_corpus.iterrows():
@@ -113,6 +113,6 @@ for repo in repoList[1:2]:
     fileNameToSave = fileNameToSave.replace('/','_')
 
     # Specify the path to the output CSV file
-    output_csv_file = "CSCI-420-GenAI/CSCI420-Assignment-1/data/Extracted Data/extracted_methods_{}.csv".format(fileNameToSave)
+    output_csv_file = "CSCI-420-GenAI/CSCI420-Assignment-1/data/Extracted_Data/extracted_methods_{}.csv".format(fileNameToSave)
     # Run the extraction
     extract_methods_to_csv_from_master(repo, output_csv_file)
