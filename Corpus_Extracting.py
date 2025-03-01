@@ -2,6 +2,10 @@ import pandas as pd
 from pydriller import Repository
 import csv
 import javalang
+import os
+import re
+
+FOLDER_PATH = "CSCI-420-GenAI/CSCI420-Assignment-1/data"
 
 def extract_methods_from_java(code):
     """
@@ -101,23 +105,48 @@ def extract_methods_to_csv(repo_path, output_csv):
 
                     print(f"Extracted methods from {modified_file.filename} in commit {commit.hash}")
 
+def replace_multiple_spaces(text):
+  """Replaces multiple spaces with a single space in a string.
 
-csv_corpus = pd.read_csv('CSCI-420-GenAI/CSCI420-Assignment-1/data/Raw_Data/results.csv')
+  Args:
+    text: The input string.
+
+  Returns:
+    The string with multiple spaces replaced by single spaces.
+  """
+  return re.sub(r"\s+", " ", text)
+
+csv_corpus = pd.read_csv(f'{FOLDER_PATH}/Raw_Data/results.csv')
 
 repoList = []
 for idx,row in csv_corpus.iterrows():
   repoList.append("https://www.github.com/{}".format(row['name']))
 
-for repo in repoList:
+for repo in repoList[:30]:
 
     fileNameToSave = ''.join(repo.split('github.com')[1:])
     fileNameToSave = fileNameToSave.replace('/','_')
 
     # Specify the path to the output CSV file
-    output_csv_file = "CSCI-420-GenAI/CSCI420-Assignment-1/data/Extracted_Data/extracted_methods_{}.csv".format(fileNameToSave)
+    output_csv_file = f"{FOLDER_PATH}/Extracted_Data/extracted_methods_{fileNameToSave}.csv"
     # Run the extraction
     try:
         extract_methods_to_csv_from_master(repo, output_csv_file)
     except:
         continue
+
+with open(f"{FOLDER_PATH}/Corpus.txt", "w") as file:
+    try:
+        for filename in os.listdir(f"{FOLDER_PATH}/Extracted_Data"):
+            file_path = os.path.join(f"{FOLDER_PATH}/Extracted_Data", filename)
+            csv_corpus = pd.read_csv(file_path)
+            for idx,row in csv_corpus.iterrows():
+                method = replace_multiple_spaces(row['Method Code'].replace("\n", " ").replace("\t", " "))
+                print(f"Writing: {method}")
+                file.write(f"{method}\n")
+
+    except FileNotFoundError:
+        print(f"Error: Folder not found at {f"{FOLDER_PATH}/Extracted_Data"}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 

@@ -1,5 +1,5 @@
 import re
-import os
+
 from pygments.lexers.jvm import JavaLexer
 from pygments.lexers import get_lexer_by_name
 from pygments.token import Token
@@ -61,28 +61,6 @@ def remove_comments_from_dataframe(df: pd.DataFrame, method_column: str, languag
     df["Method Java No Comments"] = df[method_column].apply(remove_comments)
     return df
 
-def replace_multiple_spaces(text):
-  """Replaces multiple spaces with a single space in a string.
 
-  Args:
-    text: The input string.
 
-  Returns:
-    The string with multiple spaces replaced by single spaces.
-  """
-  return re.sub(r"\s+", " ", text)
 
-with open("CSCI-420-GenAI/CSCI420-Assignment-1/data/Corpus.txt", "w") as file:
-    try:
-        for filename in os.listdir(FOLDER_PATH):
-            file_path = os.path.join(FOLDER_PATH, filename)
-            csv_corpus = pd.read_csv(file_path)
-            for idx,row in csv_corpus.iterrows():
-                method = replace_multiple_spaces(row['Method Code'].replace("\n", " ").replace("\t", " "))
-                print(f"Writing: {method}")
-                file.write(f"{method}\n")
-
-    except FileNotFoundError:
-        print(f"Error: Folder not found at {FOLDER_PATH}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
