@@ -1,5 +1,4 @@
 import re
-from pygments.lexers.jvm import JavaLexer
 from pygments.lexers import get_lexer_by_name
 from pygments.token import Token
 import pandas as pd
