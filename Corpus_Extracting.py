@@ -3,12 +3,6 @@ from pydriller import Repository
 import csv
 import javalang
 
-csv_corpus = pd.read_csv('CSCI-420-GenAI/CSCI420-Assignment-1/data/Raw_Data/results.csv')
-
-repoList = []
-for idx,row in csv_corpus.iterrows():
-  repoList.append("https://www.github.com/{}".format(row['name']))
-
 def extract_methods_from_java(code):
     """
     Extract methods from Java source code using javalang parser.
@@ -107,7 +101,14 @@ def extract_methods_to_csv(repo_path, output_csv):
 
                     print(f"Extracted methods from {modified_file.filename} in commit {commit.hash}")
 
-for repo in repoList[1:2]:
+
+csv_corpus = pd.read_csv('CSCI-420-GenAI/CSCI420-Assignment-1/data/Raw_Data/results.csv')
+
+repoList = []
+for idx,row in csv_corpus.iterrows():
+  repoList.append("https://www.github.com/{}".format(row['name']))
+
+for repo in repoList:
 
     fileNameToSave = ''.join(repo.split('github.com')[1:])
     fileNameToSave = fileNameToSave.replace('/','_')
@@ -115,4 +116,8 @@ for repo in repoList[1:2]:
     # Specify the path to the output CSV file
     output_csv_file = "CSCI-420-GenAI/CSCI420-Assignment-1/data/Extracted_Data/extracted_methods_{}.csv".format(fileNameToSave)
     # Run the extraction
-    extract_methods_to_csv_from_master(repo, output_csv_file)
+    try:
+        extract_methods_to_csv_from_master(repo, output_csv_file)
+    except:
+        continue
+
