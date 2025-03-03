@@ -7,6 +7,7 @@ import numpy as np
 import csv
 import sys
 import random
+import pickle
 
 FOLDER_PATH = "/home/jmpomeroy/CSCI_420/CSCI420-Assignment-1/data"
 FILE_NAME = ""
@@ -41,7 +42,7 @@ if len(sys.argv) > 1:
         training_corpus = file_lines[:training_size]
         eval_corpus = file_lines[training_size:training_size + eval_size]
         test_corpus = file_lines[training_size + eval_size:training_size+eval_size+test_size]
-        output_file = "results_teacher_model.csv"
+        output_file = "results_teacher_model"
     except FileNotFoundError:
         print("File Not Found")
 else:
@@ -60,7 +61,7 @@ else:
         for line in file:
             test_corpus.append(line.strip())
     
-    output_file = "results_student_model.csv"
+    output_file = "results_student_model"
 
 # Tokenize every method in the Training Set
 for method in training_corpus:
@@ -220,9 +221,9 @@ print(f"Nonagram Perplexity: {nonagram_perplexity}\n")
 """
 Extracted Corpus Perplexities
 """
-#trigram_perplexity = 952908.4984631359
-#pentagram_perplexity = 7704743.087282966
-#nonagram_perplexity = 19059891.011915024
+trigram_perplexity = 952908.4984631359
+pentagram_perplexity = 7704743.087282966
+nonagram_perplexity = 19059891.011915024
 
 """
 Teacher Corpus Perplexities
@@ -231,9 +232,9 @@ Teacher Corpus Perplexities
 #pentagram_perplexity = 3207097.3825185383
 #nonagram_perplexity = 35417361.621163145
 
-perplexity_list = [trigram_perplexity, pentagram_perplexity, nonagram_perplexity]
-min_perplexity = min(perplexity_list)
-min_index = perplexity_list.index(min_perplexity)
+#perplexity_list = [trigram_perplexity, pentagram_perplexity, nonagram_perplexity]
+#min_perplexity = min(perplexity_list)
+#min_index = perplexity_list.index(min_perplexity)
 
 match min_index:
     case 0:
@@ -249,7 +250,7 @@ match min_index:
         best_n = 9
         print(f"The best performing model is nonagrams, with {nonagram_perplexity} perplexity")
 
-with open(f"{FOLDER_PATH}/{output_file}", "w", newline='', encoding='utf-8') as csvfile:
+with open(f"{FOLDER_PATH}/{output_file}.csv", "w", newline='', encoding='utf-8') as csvfile:
     csv_writer = csv.writer(csvfile)
     csv_writer.writerow(["ID", "Given String", "Predicted Continuation", "Full Method"])
 
@@ -356,6 +357,9 @@ print(f"Perplexity on Test set is: {test_perp}")
 Student Test Set Perplexity: 969314.0181455543
 Teacher Test Set Perplexity: 156094.86393119284
 """
+# Save Model to a file
+with open(f'{output_file}.pickle', 'wb') as file:
+    pickle.dump(final_model, file)
 
 
 
