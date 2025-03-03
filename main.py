@@ -216,17 +216,61 @@ with open(f"{FOLDER_PATH}/results_student_model.csv", "w", newline='', encoding=
     for method in test_set:
         method_length = len(method) - best_n - 1
         start_of_method = method[:best_n-1]
-        generated_method = start_of_method
+        generated_method = method[:best_n-1]
         predictions = []
         current_pos = 0
+        paren_count = 0
+        bracket_count = 0
+
         while(method_length):
             try:
-                predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
-                generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
+                # Ensure balanced parens
+                if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == ')':
+                    if paren_count > 0:
+                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
+                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
+                        paren_count -= 1
+                    else:
+                        if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '(':
+                            paren_count += 1
+                        elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '{':
+                            bracket_count += 1
+
+                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1])
+                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0]) 
+                # Ensure balanced brackets
+                elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == '}':
+                    if bracket_count > 0:
+                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
+                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
+                        bracket_count -= 1
+                    else:
+                        if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '{':
+                            bracket_count += 1
+                        elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '(':
+                            paren_count += 1
+
+                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1])
+                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0])
+                else:
+                    if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == '{':
+                        bracket_count += 1
+                    elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == '(':
+                        paren_count += 1
+                    
+                    predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
+                    generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
             except KeyError:
                 break
             method_length -= 1
             current_pos += 1
+
+        while(paren_count):
+            predictions.append((')', "Paren balancing"))
+            paren_count -= 1
+        while(bracket_count):
+            predictions.append(('}', "Bracket balancing"))
+            bracket_count -= 1
 
         csv_writer.writerow([counter, start_of_method, predictions])
         quit()
