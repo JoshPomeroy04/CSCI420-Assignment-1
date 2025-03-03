@@ -25,11 +25,11 @@ Ensure you set the FOLDER_PATH variable to be the correct folder path of the dat
 
 Install the required dependencies:
 
-pip install nltk
-pip install pygments
-pip install numpy
-pip install collections
-pip install csv
+pip install nltk \
+pip install pygments \
+pip install numpy \
+pip install collections \
+pip install csv \
 
 ## **2.3 Run N-gram**
 
