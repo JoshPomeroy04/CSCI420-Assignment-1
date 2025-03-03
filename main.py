@@ -6,6 +6,7 @@ from math import floor
 import numpy as np
 import csv
 import sys
+import random
 
 FOLDER_PATH = "CSCI_420/CSCI420-Assignment-1/data"
 FILE_NAME = ""
@@ -173,6 +174,23 @@ def convert_model_to_prob(model):
         
     return model
 
+def weighted_random_selection(items, weights):
+  """
+  Selects a random item from a list based on specified weights.
+
+  Args:
+    items: A list of items to choose from.
+    weights: A list of weights corresponding to each item, representing probabilities.
+
+  Returns:
+    A randomly selected item from the list.
+  """
+  if len(items) != len(weights):
+    raise ValueError("The number of items and weights must be equal.")
+
+  return random.choices(items, weights=weights, k=1)[0]
+
+
 bigrams = create_ngrams(tokenized_training_corpus, 2)
 trigram_model = make_model(3)
 
@@ -210,7 +228,7 @@ match min_index:
 
 with open(f"{FOLDER_PATH}/results_student_model.csv", "w", newline='', encoding='utf-8') as csvfile:
     csv_writer = csv.writer(csvfile)
-    csv_writer.writerow(["ID", "Given String", "Predicted Continuation"])
+    csv_writer.writerow(["ID", "Given String", "Predicted Continuation", "Full Method"])
 
     counter = 1
     for method in test_set:
@@ -224,42 +242,66 @@ with open(f"{FOLDER_PATH}/results_student_model.csv", "w", newline='', encoding=
 
         while(method_length):
             try:
+                possible_words = []
+                possible_word_weights = []
+
+                for word in list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])]):
+                    possible_words.append(word[0])
+                    possible_word_weights.append(word[1])
+
+                prediction = weighted_random_selection(possible_words, possible_word_weights)
+
                 # Ensure balanced parens
-                if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == ')':
+                if prediction == ')':
                     if paren_count > 0:
-                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
-                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
+                        predictions.append((prediction, possible_word_weights[possible_words.index(prediction)]))
+                        generated_method.append(prediction)
                         paren_count -= 1
                     else:
-                        if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '(':
+                        if len(possible_words) == 1:
+                            break
+                        
+                        possible_word_weights.pop(possible_words.index(')'))
+                        possible_words.remove(')')
+                        prediction = weighted_random_selection(possible_words, possible_word_weights)
+
+                        if prediction == '(':
                             paren_count += 1
-                        elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '{':
+                        elif prediction == '{':
                             bracket_count += 1
 
-                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1])
-                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0]) 
+                        predictions.append((prediction, possible_word_weights[possible_words.index(prediction)]))
+                        generated_method.append(prediction)
+
                 # Ensure balanced brackets
-                elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == '}':
+                elif prediction == '}':
                     if bracket_count > 0:
-                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
-                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
+                        predictions.append((prediction, possible_word_weights[possible_words.index(prediction)]))
+                        generated_method.append(prediction)
                         bracket_count -= 1
                     else:
-                        if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '{':
-                            bracket_count += 1
-                        elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0] == '(':
-                            paren_count += 1
+                        if len(possible_words) == 1:
+                            break
+                        
+                        possible_word_weights.pop(possible_words.index('}'))
+                        possible_words.remove('}')
+                        prediction = weighted_random_selection(possible_words, possible_word_weights)
 
-                        predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1])
-                        generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[1][0])
+                        if prediction == '(':
+                            paren_count += 1
+                        elif prediction == '{':
+                            bracket_count += 1
+
+                        predictions.append((prediction, possible_word_weights[possible_words.index(prediction)]))
+                        generated_method.append(prediction)
                 else:
-                    if list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == '{':
+                    if prediction == '{':
                         bracket_count += 1
-                    elif list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0] == '(':
+                    elif prediction == '(':
                         paren_count += 1
                     
-                    predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
-                    generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
+                    predictions.append((prediction, possible_word_weights[possible_words.index(prediction)]))
+                    generated_method.append(prediction)
             except KeyError:
                 break
             method_length -= 1
@@ -267,14 +309,17 @@ with open(f"{FOLDER_PATH}/results_student_model.csv", "w", newline='', encoding=
 
         while(paren_count):
             predictions.append((')', "Paren balancing"))
+            generated_method.append(')')
             paren_count -= 1
         while(bracket_count):
             predictions.append(('}', "Bracket balancing"))
+            predictions.append('}')
             bracket_count -= 1
 
-        csv_writer.writerow([counter, start_of_method, predictions])
-        quit()
+        csv_writer.writerow([counter, start_of_method, predictions, ' '.join(generated_method)])
         counter += 1
+        if counter == 101:
+            break
     
 
 
