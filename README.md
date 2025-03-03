@@ -19,7 +19,7 @@ This project is implemented in **Python 3.10.12** 64-bit. It was developed and t
 ~/your-project $
 ```
 
-Ensure you set the FOLDER_PATH variable to be the correct folder path of the data folder on your machine.
+Ensure you set the FOLDER_PATH variable to be the correct folder path of the data folder on your machine. This variable is easily found at the top of main.py.
 
 ## **2.2 Install Packages**
 
