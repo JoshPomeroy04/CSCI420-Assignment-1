@@ -8,7 +8,7 @@ import csv
 import sys
 import random
 
-FOLDER_PATH = "CSCI_420/CSCI420-Assignment-1/data"
+FOLDER_PATH = "/home/jmpomeroy/CSCI_420/CSCI420-Assignment-1/data"
 FILE_NAME = ""
 lexer = JavaLexer()
 final_model = Counter()
@@ -22,6 +22,7 @@ tokenized_training_corpus = []
 words = []
 test_set = []
 best_n = -1
+output_file = ""
 
 if len(sys.argv) > 1:
     FILE_NAME = sys.argv[1]
@@ -31,12 +32,15 @@ if len(sys.argv) > 1:
             for line in file: 
                 file_lines.append(line.strip())
         
-        training_size = floor(len(file_lines * .80))
-        eval_size, test_size = floor(len(file_lines * .10))
+        training_size = floor(len(file_lines) * .80)
+
+        eval_size = floor(len(file_lines) * .10)
+        test_size = floor(len(file_lines) * .10)
 
         training_corpus = file_lines[:training_size]
         eval_corpus = file_lines[training_size:training_size + eval_size]
         test_corpus = file_lines[training_size + eval_size:training_size+eval_size+test_size]
+        output_file = "results_teacher_model.csv"
     except FileNotFoundError:
         print("File Not Found")
 else:
@@ -54,6 +58,8 @@ else:
     with open(f"{FOLDER_PATH}/Test_Set.txt", "r") as file:
         for line in file:
             test_corpus.append(line.strip())
+    
+    output_file = "results_student_model.csv"
 
 # Tokenize every method in the Training Set
 for method in training_corpus:
@@ -201,12 +207,31 @@ octagrams = create_ngrams(tokenized_training_corpus, 8)
 nonagram_model = make_model(9)
 
 
-#trigram_perplexity = calc_perp(bigrams, trigram_model, tri_eval_set, 3)
-#pentagram_perplexity = calc_perp(quadgrams, pentagram_model, penta_eval_set, 5)
-#nonagram_perplexity = calc_perp(octagrams, nonagram_model, nona_eval_set, 9)
-trigram_perplexity = 952908.4984631359
-pentagram_perplexity = 7704743.087282966
-nonagram_perplexity = 19059891.011915024
+"""
+print("Calculating Trigram Perplexity...")
+trigram_perplexity = calc_perp(bigrams, trigram_model, tri_eval_set, 3)
+print(f"Trigram Perplexity: {trigram_perplexity}\n")
+print("Calculating Pentagram Perplexity...")
+pentagram_perplexity = calc_perp(quadgrams, pentagram_model, penta_eval_set, 5)
+print(f"Pentagram Perplexity: {pentagram_perplexity}\n")
+print("Calculating Nonagram Perplexity...")
+nonagram_perplexity = calc_perp(octagrams, nonagram_model, nona_eval_set, 9)
+print(f"Nonagram Perplexity: {nonagram_perplexity}\n")
+"""
+
+"""
+Extracted Corpus Perplexities
+"""
+#trigram_perplexity = 952908.4984631359
+#pentagram_perplexity = 7704743.087282966
+#nonagram_perplexity = 19059891.011915024
+
+"""
+Teacher Corpus Perplexities
+"""
+trigram_perplexity = 156285.80460023868
+pentagram_perplexity = 3207097.3825185383
+nonagram_perplexity = 35417361.621163145
 
 perplexity_list = [trigram_perplexity, pentagram_perplexity, nonagram_perplexity]
 min_perplexity = min(perplexity_list)
@@ -226,7 +251,7 @@ match min_index:
         best_n = 9
         print(f"The best performing model is nonagrams, with {nonagram_perplexity} perplexity")
 
-with open(f"{FOLDER_PATH}/results_student_model.csv", "w", newline='', encoding='utf-8') as csvfile:
+with open(f"{FOLDER_PATH}/{output_file}", "w", newline='', encoding='utf-8') as csvfile:
     csv_writer = csv.writer(csvfile)
     csv_writer.writerow(["ID", "Given String", "Predicted Continuation", "Full Method"])
 
@@ -313,7 +338,7 @@ with open(f"{FOLDER_PATH}/results_student_model.csv", "w", newline='', encoding=
             paren_count -= 1
         while(bracket_count):
             predictions.append(('}', "Bracket balancing"))
-            predictions.append('}')
+            generated_method.append(')')
             bracket_count -= 1
 
         csv_writer.writerow([counter, start_of_method, predictions, ' '.join(generated_method)])
