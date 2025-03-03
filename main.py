@@ -206,8 +206,6 @@ pentagram_model = make_model(5)
 octagrams = create_ngrams(tokenized_training_corpus, 8)
 nonagram_model = make_model(9)
 
-
-"""
 print("Calculating Trigram Perplexity...")
 trigram_perplexity = calc_perp(bigrams, trigram_model, tri_eval_set, 3)
 print(f"Trigram Perplexity: {trigram_perplexity}\n")
@@ -217,7 +215,6 @@ print(f"Pentagram Perplexity: {pentagram_perplexity}\n")
 print("Calculating Nonagram Perplexity...")
 nonagram_perplexity = calc_perp(octagrams, nonagram_model, nona_eval_set, 9)
 print(f"Nonagram Perplexity: {nonagram_perplexity}\n")
-"""
 
 """
 Extracted Corpus Perplexities
@@ -229,9 +226,9 @@ Extracted Corpus Perplexities
 """
 Teacher Corpus Perplexities
 """
-trigram_perplexity = 156285.80460023868
-pentagram_perplexity = 3207097.3825185383
-nonagram_perplexity = 35417361.621163145
+#trigram_perplexity = 156285.80460023868
+#pentagram_perplexity = 3207097.3825185383
+#nonagram_perplexity = 35417361.621163145
 
 perplexity_list = [trigram_perplexity, pentagram_perplexity, nonagram_perplexity]
 min_perplexity = min(perplexity_list)
