@@ -2,10 +2,13 @@ from pygments.lexers.jvm import JavaLexer
 from collections import Counter
 from nltk import ngrams
 from math import log2
+from math import floor
 import numpy as np
 import csv
+import sys
 
 FOLDER_PATH = "CSCI_420/CSCI420-Assignment-1/data"
+FILE_NAME = ""
 lexer = JavaLexer()
 final_model = Counter()
 training_corpus = []
@@ -19,42 +22,86 @@ words = []
 test_set = []
 best_n = -1
 
-with open(f"{FOLDER_PATH}/Training_Corpus.txt") as file:
-    for line in file:
-        training_corpus.append(line.strip())
+if len(sys.argv) > 1:
+    FILE_NAME = sys.argv[1]
+    file_lines = []
+    try:
+        with open(FILE_NAME) as file:
+            for line in file: 
+                file_lines.append(line.strip())
+        
+        training_size = floor(len(file_lines * .80))
+        eval_size, test_size = floor(len(file_lines * .10))
 
-with open(f"{FOLDER_PATH}/Eval_Set.txt", "r") as file:
-    for line in file:
-        eval_corpus.append(line.strip())
+        training_corpus = file_lines[:training_size]
+        eval_corpus = file_lines[training_size:training_size + eval_size]
+        test_corpus = file_lines[training_size + eval_size:training_size+eval_size+test_size]
+    except FileNotFoundError:
+        print("File Not Found")
+else:
+    # Extract Training Corpus File
+    with open(f"{FOLDER_PATH}/Training_Corpus.txt") as file:
+        for line in file:
+            training_corpus.append(line.strip())
 
-with open(f"{FOLDER_PATH}/Test_Set.txt", "r") as file:
-    for line in file:
-        test_corpus.append(line.strip())
+    # Extract Eval Set File
+    with open(f"{FOLDER_PATH}/Eval_Set.txt", "r") as file:
+        for line in file:
+            eval_corpus.append(line.strip())
 
+    # Extract Test Set File
+    with open(f"{FOLDER_PATH}/Test_Set.txt", "r") as file:
+        for line in file:
+            test_corpus.append(line.strip())
+
+# Tokenize every method in the Training Set
 for method in training_corpus:
     tokenized_method = [t[1].strip() for t in lexer.get_tokens(method) if t[1].strip() != '']
     words += tokenized_method
     tokenized_training_corpus += [tokenized_method]
 
+# Tokenize every method in the Eval Set and create specific Eval Sets for each ngram
 for method in eval_corpus:
     tokenized_method = [t[1].strip() for t in lexer.get_tokens(method) if t[1].strip() != '']
     tri_eval_set += ngrams(tokenized_method, 3)
     penta_eval_set += ngrams(tokenized_method, 5)
     nona_eval_set += ngrams(tokenized_method, 9)
 
+# Tokenize every method in the Test Set
 for method in test_corpus[:100]:
     tokenized_method = [t[1].strip() for t in lexer.get_tokens(method) if t[1].strip() != '']
     test_set += [tokenized_method]
 
-def create_ngrams(tokenized_corpus, N):
+
+def create_ngrams(tokenized_corpus, n):
+    """Creates a Counter() containing ngrams.
+
+    Args:
+       tokenized_corpus: Tokenized list of values
+       n: Integer representing order of gram to create
+
+    Returns:
+       Counter() Object containing the counts of each ngram
+    """
     ngram = []
     for method in tokenized_corpus:
-        ngram += list(ngrams(method, N))
+        ngram += list(ngrams(method, n))
 
     ngram_counts = Counter(ngram)
     return ngram_counts
 
 def calc_perp(n_minus_one_model, model, eval_set, n):  
+    """Calculates perplexity of a given model on a given set.
+
+    Args:
+       n_minus_one_model: ngram model of 1 lower order than the one being calculated
+       model: Model to calculate perplexity of
+       eval_set: List of ngrams matching the order of the model to calculate perplexity on
+       n: Order of the model
+
+    Returns:
+       Float representing the Perplexity
+    """
     prob_array = []
 
     for ngram in eval_set:
@@ -78,6 +125,14 @@ def calc_perp(n_minus_one_model, model, eval_set, n):
 
 
 def make_model(n):
+    """Creates a ngram model of n order.
+
+    Args:
+       n: Order of the model
+
+    Returns:
+       Dictionary representing the model
+    """
     ngram_list = []
     model = {}
     for method in tokenized_training_corpus:
@@ -98,6 +153,14 @@ def make_model(n):
     return model
 
 def convert_model_to_prob(model):
+    """Converts the number next to word occurances to their probability instead of their count.
+
+    Args:
+       model: Model to convert
+
+    Returns:
+       Converted model with words in descending order of likelyness given x context
+    """
     for context in model:
         total = 0
         for word in model[context]:
