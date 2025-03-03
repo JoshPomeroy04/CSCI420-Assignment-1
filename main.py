@@ -3,6 +3,7 @@ from collections import Counter
 from nltk import ngrams
 from math import log2
 import numpy as np
+import csv
 
 FOLDER_PATH = "CSCI_420/CSCI420-Assignment-1/data"
 lexer = JavaLexer()
@@ -41,7 +42,7 @@ for method in eval_corpus:
     penta_eval_set += ngrams(tokenized_method, 5)
     nona_eval_set += ngrams(tokenized_method, 9)
 
-for method in test_corpus:
+for method in test_corpus[:100]:
     tokenized_method = [t[1].strip() for t in lexer.get_tokens(method) if t[1].strip() != '']
     test_set += [tokenized_method]
 
@@ -107,7 +108,7 @@ def convert_model_to_prob(model):
         
         model[context] = sorted(model[context].items(), key=lambda x: x[1], reverse=True)
         
-        return model
+    return model
 
 bigrams = create_ngrams(tokenized_training_corpus, 2)
 trigram_model = make_model(3)
@@ -144,11 +145,30 @@ match min_index:
         best_n = 9
         print(f"The best performing model is nonagrams, with {nonagram_perplexity} perplexity")
 
-for method in test_set:
-    start_of_method = method[:best_n-1]
-    for gram in final_model:
-        print(final_model[gram])
+with open(f"{FOLDER_PATH}/results_student_model.csv", "w", newline='', encoding='utf-8') as csvfile:
+    csv_writer = csv.writer(csvfile)
+    csv_writer.writerow(["ID", "Given String", "Predicted Continuation"])
+
+    counter = 1
+    for method in test_set:
+        method_length = len(method) - best_n - 1
+        start_of_method = method[:best_n-1]
+        generated_method = start_of_method
+        predictions = []
+        current_pos = 0
+        while(method_length):
+            try:
+                predictions.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0])
+                generated_method.append(list(final_model[tuple(generated_method[current_pos:current_pos + best_n-1])])[0][0])
+            except KeyError:
+                break
+            method_length -= 1
+            current_pos += 1
+
+        csv_writer.writerow([counter, start_of_method, predictions])
         quit()
+        counter += 1
+    
 
 
 
