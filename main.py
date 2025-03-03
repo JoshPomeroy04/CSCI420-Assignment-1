@@ -1,15 +1,12 @@
 from pygments.lexers.jvm import JavaLexer
 from collections import Counter
-from nltk.lm import MLE
 from nltk import ngrams
-from nltk.lm.preprocessing import padded_everygram_pipeline
-from nltk.lm import Vocabulary
 from math import log2
-from math import inf
 import numpy as np
 
 FOLDER_PATH = "/home/jmp/CSCI-420-GenAI/CSCI420-Assignment-1/data"
 lexer = JavaLexer()
+final_model = Counter()
 training_corpus = []
 eval_corpus = []
 tri_eval_set = []
@@ -75,9 +72,20 @@ trigram_perplexity = calc_perp(bigrams, trigrams, 3, tri_eval_set)
 pentagram_perplexity = calc_perp(quadgrams, pentagrams, 5, penta_eval_set)
 nonagram_perplexity = calc_perp(octagrams, nonagrams, 9, nona_eval_set)
 
-print(trigram_perplexity)
-print(pentagram_perplexity)
-print(nonagram_perplexity)
+perplexity_list = [trigram_perplexity, pentagram_perplexity, nonagram_perplexity]
+min_perplexity = min(perplexity_list)
+min_index = perplexity_list.index(min_perplexity)
+
+match min_index:
+    case 0:
+        final_model = trigram_perplexity
+        print(f"The best performing model is trigrams, with {trigram_perplexity} perplexity")
+    case 1:
+        final_model = pentagrams
+        print(f"The best performing model is pentagrams, with {pentagram_perplexity} perplexity")
+    case 2:
+        final_model = nonagrams
+        print(f"The best performing model is nonagrams, with {nonagram_perplexity} perplexity")
 
 
 
