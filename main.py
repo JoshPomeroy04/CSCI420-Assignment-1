@@ -4,7 +4,7 @@ from nltk import ngrams
 from math import log2
 import numpy as np
 
-FOLDER_PATH = "/home/jmp/CSCI-420-GenAI/CSCI420-Assignment-1/data"
+FOLDER_PATH = "CSCI_420/CSCI420-Assignment-1/data"
 lexer = JavaLexer()
 final_model = Counter()
 training_corpus = []
@@ -17,7 +17,6 @@ tokenized_training_corpus = []
 words = []
 test_set = []
 best_n = -1
-
 
 with open(f"{FOLDER_PATH}/Training_Corpus.txt") as file:
     for line in file:
@@ -54,22 +53,7 @@ def create_ngrams(tokenized_corpus, N):
     ngram_counts = Counter(ngram)
     return ngram_counts
 
-
-def calc_perp(n_minus_one_gram_Counts, ngram_Counts, N, eval_set):   
-    n_minus_one_vocab_size = sum(n_minus_one_gram_Counts.values())
-    prob_array = []
-
-    for ngram in eval_set:
-        numerator = ngram_Counts[ngram] + 1
-        denominator = n_minus_one_gram_Counts[ngram[0:N-1]] + n_minus_one_vocab_size
-        token_probability = log2(float(numerator) / float(denominator))
-        prob_array.append(token_probability)
-        
-    total_ngram_perplexity = np.exp(-np.mean(prob_array))
-        
-    return total_ngram_perplexity
-
-def calc_perp2(n_minus_one_model, model, eval_set, n):  
+def calc_perp(n_minus_one_model, model, eval_set, n):  
     prob_array = []
 
     for ngram in eval_set:
@@ -91,6 +75,7 @@ def calc_perp2(n_minus_one_model, model, eval_set, n):
         
     return total_ngram_perplexity
 
+
 def make_model(n):
     ngram_list = []
     model = {}
@@ -111,6 +96,19 @@ def make_model(n):
     
     return model
 
+def convert_model_to_prob(model):
+    for context in model:
+        total = 0
+        for word in model[context]:
+            total += model[context][word]
+        
+        for word in model[context]:
+            model[context][word] /= total
+        
+        model[context] = sorted(model[context].items(), key=lambda x: x[1], reverse=True)
+        
+        return model
+
 bigrams = create_ngrams(tokenized_training_corpus, 2)
 trigram_model = make_model(3)
 
@@ -121,21 +119,12 @@ octagrams = create_ngrams(tokenized_training_corpus, 8)
 nonagram_model = make_model(9)
 
 
-print(calc_perp2(bigrams, trigram_model, tri_eval_set, 3))
-print(calc_perp2(quadgrams, pentagram_model, penta_eval_set, 5))
-print(calc_perp2(octagrams, nonagram_model, nona_eval_set, 9))
-quit()
-trigrams = create_ngrams(tokenized_training_corpus, 3)
-
-
-pentagrams = create_ngrams(tokenized_training_corpus, 5)
-
-
-nonagrams = create_ngrams(tokenized_training_corpus, 9)
-
-trigram_perplexity = calc_perp(bigrams, trigrams, 3, tri_eval_set)
-pentagram_perplexity = calc_perp(quadgrams, pentagrams, 5, penta_eval_set)
-nonagram_perplexity = calc_perp(octagrams, nonagrams, 9, nona_eval_set)
+#trigram_perplexity = calc_perp(bigrams, trigram_model, tri_eval_set, 3)
+#pentagram_perplexity = calc_perp(quadgrams, pentagram_model, penta_eval_set, 5)
+#nonagram_perplexity = calc_perp(octagrams, nonagram_model, nona_eval_set, 9)
+trigram_perplexity = 952908.4984631359
+pentagram_perplexity = 7704743.087282966
+nonagram_perplexity = 19059891.011915024
 
 perplexity_list = [trigram_perplexity, pentagram_perplexity, nonagram_perplexity]
 min_perplexity = min(perplexity_list)
@@ -143,22 +132,22 @@ min_index = perplexity_list.index(min_perplexity)
 
 match min_index:
     case 0:
-        final_model = trigrams
+        final_model = convert_model_to_prob(trigram_model)
         best_n = 3
         print(f"The best performing model is trigrams, with {trigram_perplexity} perplexity")
     case 1:
-        final_model = pentagrams
+        final_model = convert_model_to_prob(pentagram_model)
         best_n = 5
         print(f"The best performing model is pentagrams, with {pentagram_perplexity} perplexity")
     case 2:
-        final_model = nonagrams
+        final_model = convert_model_to_prob(nonagram_model)
         best_n = 9
         print(f"The best performing model is nonagrams, with {nonagram_perplexity} perplexity")
 
 for method in test_set:
     start_of_method = method[:best_n-1]
     for gram in final_model:
-        print(gram)
+        print(final_model[gram])
         quit()
 
 
