@@ -21,6 +21,7 @@ nona_eval_set = []
 tokenized_training_corpus = []
 words = []
 test_set = []
+test_set_grams = []
 best_n = -1
 output_file = ""
 
@@ -75,7 +76,7 @@ for method in eval_corpus:
     nona_eval_set += ngrams(tokenized_method, 9)
 
 # Tokenize every method in the Test Set
-for method in test_corpus[:100]:
+for method in test_corpus:
     tokenized_method = [t[1].strip() for t in lexer.get_tokens(method) if t[1].strip() != '']
     test_set += [tokenized_method]
 
@@ -129,7 +130,6 @@ def calc_perp(n_minus_one_model, model, eval_set, n):
     total_ngram_perplexity = np.exp(-np.mean(prob_array))
         
     return total_ngram_perplexity
-
 
 def make_model(n):
     """Creates a ngram model of n order.
@@ -206,6 +206,7 @@ pentagram_model = make_model(5)
 octagrams = create_ngrams(tokenized_training_corpus, 8)
 nonagram_model = make_model(9)
 
+
 print("Calculating Trigram Perplexity...")
 trigram_perplexity = calc_perp(bigrams, trigram_model, tri_eval_set, 3)
 print(f"Trigram Perplexity: {trigram_perplexity}\n")
@@ -253,7 +254,7 @@ with open(f"{FOLDER_PATH}/{output_file}", "w", newline='', encoding='utf-8') as 
     csv_writer.writerow(["ID", "Given String", "Predicted Continuation", "Full Method"])
 
     counter = 1
-    for method in test_set:
+    for method in test_set[:100]:
         method_length = len(method) - best_n - 1
         start_of_method = method[:best_n-1]
         generated_method = method[:best_n-1]
@@ -342,8 +343,19 @@ with open(f"{FOLDER_PATH}/{output_file}", "w", newline='', encoding='utf-8') as 
         counter += 1
         if counter == 101:
             break
-    
 
+# Calculate Perplexity on test set
+lower_gram = create_ngrams(tokenized_training_corpus, best_n-1)
+for method in test_set:
+    test_set_grams += ngrams(method, best_n)
+test_model = make_model(best_n)
+test_perp = calc_perp(lower_gram, test_model, test_set_grams, best_n)
+print(f"Perplexity on Test set is: {test_perp}")
+
+"""
+Student Test Set Perplexity: 969314.0181455543
+Teacher Test Set Perplexity: 156094.86393119284
+"""
 
 
 
