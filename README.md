@@ -29,7 +29,7 @@ pip install nltk \
 pip install pygments \
 pip install numpy \
 pip install collections \
-pip install csv \
+pip install csv
 
 ## **2.3 Run N-gram**
 
